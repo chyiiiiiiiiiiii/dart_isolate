@@ -1,6 +1,8 @@
 import 'dart:convert';
 import 'dart:io';
 import 'dart:isolate';
+
+// ignore: depend_on_referenced_packages
 import 'package:async/async.dart';
 
 // List of json file
@@ -22,19 +24,19 @@ Stream<Map<String, dynamic>> getJsonDataFromFiles() async* {
   // queue until they are accessed by `events.next`.
   final StreamQueue streamQueue = StreamQueue(receivePort);
 
-  // Create a isolate to dealwith file parsing in the background.
+  // Create a isolate to deal with file parsing in the background.
   await Isolate.spawn(isolateParsingFile, receivePort.sendPort);
 
-  // This port is resposible for communicating with the spawned isolate.
+  // This port is responsible for communicating with the spawned isolate.
   // The first message from the spawned isolate is a SendPort.
   final SendPort workerIsolateSendPort = await streamQueue.next;
 
   // Do parsing json files
   for (String fileName in jsonFileNameList) {
-    // Send file name to worker isoalte that it will parse the file.
+    // Send file name to worker isolate that it will parse the file.
     workerIsolateSendPort.send(fileName);
 
-    // Get json data of file from worker isoalte.
+    // Get json data of file from worker isolate.
     final Map<String, dynamic> jsonData = await streamQueue.next;
 
     // Add the result to the stream returned.
@@ -60,7 +62,7 @@ void isolateParsingFile(SendPort sendPort) async {
   // Send a SendPort to main isolate that it can send file name to this isolate.
   sendPort.send(receivePort.sendPort);
 
-  // Wait and dealwith message from main isolate.
+  // Wait and deal with message from main isolate.
   await for (dynamic message in receivePort) {
     if (message is String) {
       // If message is String type, it is file name.
